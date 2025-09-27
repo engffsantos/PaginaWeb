@@ -12,6 +12,7 @@ import CasesPage from './pages/CasesPage';
 import CaseDetailPage from './pages/CaseDetailPage';
 import SupportPage from './pages/SupportPage';
 import LoginPage from './pages/LoginPage';
+import BlogManagementPage from './pages/BlogManagementPage';
 import DemoPage from './pages/DemoPage';
 import NotFoundPage from './pages/NotFoundPage';
 import { solutions } from './features/solutions/data';
@@ -71,6 +72,8 @@ const App: React.FC = () => {
     page = <SupportPage />;
   } else if (pathname === '/login') {
     page = <LoginPage />;
+  } else if (pathname === '/blog-management') {
+    page = <BlogManagementPage />;
   } else if (pathname === '/demo') {
     page = <DemoPage />;
   } else if (pathname.startsWith('/cases/')) {
@@ -101,13 +104,16 @@ const App: React.FC = () => {
     page = <NotFoundPage />; 
   }
 
+  // Páginas que não devem ter header/footer
+  const isFullPageLayout = pathname === '/login' || pathname === '/blog-management';
+
   return (
     <div className="bg-off-white font-sans antialiased text-graphite-black">
-      <Header />
-      <main className="pt-16 md:pt-20">
+      {!isFullPageLayout && <Header />}
+      <main className={isFullPageLayout ? '' : 'pt-16 md:pt-20'}>
         {page}
       </main>
-      <Footer />
+      {!isFullPageLayout && <Footer />}
     </div>
   );
 };
