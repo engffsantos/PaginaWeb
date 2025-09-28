@@ -1,5 +1,12 @@
 export function errorHandler(err, req, res, next) {
-  console.error('Error:', err);
+  console.error('Error details:', {
+    name: err.name,
+    message: err.message,
+    code: err.code,
+    stack: err.stack,
+    url: req.url,
+    method: req.method
+  });
 
   if (err.name === 'ValidationError') {
     return res.status(400).json({
@@ -23,7 +30,7 @@ export function errorHandler(err, req, res, next) {
   // Erro genérico
   res.status(500).json({
     error: 'internal_server_error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    message: err.message || 'Something went wrong'
   });
 }
 

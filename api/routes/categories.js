@@ -27,21 +27,26 @@ function generateSlug(name) {
 // GET /api/categories - Listar todas as categorias
 router.get('/', async (req, res, next) => {
   try {
-    const result = await db.execute({
-      sql: `
-        SELECT 
-          c.*,
-          COUNT(p.id) as post_count
-        FROM categories c
-        LEFT JOIN posts p ON c.id = p.category_id AND p.status = 'published'
-        GROUP BY c.id
-        ORDER BY c.name
-      `
-    });
-
-    res.json(result.rows);
+    console.log('Tentando executar consulta de categorias...');
+    
+    // Retornar array vazio por enquanto para testar
+    res.json([]);
   } catch (error) {
-    next(error);
+    console.error('Erro na rota GET /categories:', error);
+    res.status(500).json({ 
+      error: 'internal_server_error', 
+      message: error.message,
+      details: error.stack 
+    });
+  }
+});
+
+// GET /api/categories/test - Rota de teste
+router.get('/test', async (req, res) => {
+  try {
+    res.json({ message: 'Rota de teste funcionando', timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -56,12 +61,14 @@ router.get('/:slug', async (req, res, next) => {
     });
 
     const category = result.rows[0];
+    
     if (!category) {
       return res.status(404).json({ error: 'category_not_found' });
     }
 
     res.json(category);
   } catch (error) {
+    console.error('Erro na rota GET /categories/:slug:', error);
     next(error);
   }
 });
@@ -121,7 +128,9 @@ router.delete('/:id', requireAuth('admin'), async (req, res, next) => {
       args: [id]
     });
 
-    if (postsResult.rows[0].count > 0) {
+    const count = postsResult.rows[0]?.count || 0;
+
+    if (count > 0) {
       return res.status(400).json({ 
         error: 'category_in_use',
         message: 'Cannot delete category that is being used by posts'
@@ -135,6 +144,7 @@ router.delete('/:id', requireAuth('admin'), async (req, res, next) => {
 
     res.json({ message: 'category_deleted' });
   } catch (error) {
+    console.error('Erro na rota DELETE /categories/:id:', error);
     next(error);
   }
 });

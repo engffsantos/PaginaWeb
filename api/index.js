@@ -7,8 +7,8 @@ import { errorHandler } from './middlewares/error.js';
 
 // Importar rotas
 import authRoutes from './routes/auth.js';
-import postsRoutes from './routes/posts.js';
-import categoriesRoutes from './routes/categories.js';
+import postsRoutes from './routes/posts_fixed.js';
+import categoriesRoutes from './routes/categories_fixed.js';
 import tagsRoutes from './routes/tags.js';
 
 const app = express();
