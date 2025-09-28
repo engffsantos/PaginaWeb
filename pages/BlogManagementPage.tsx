@@ -57,7 +57,7 @@ const BlogManagementPage: React.FC = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await fetch('https://xlhyimcdz1m6.manus.spacehttps://xlhyimcdz1m6.manus.space/api/auth/me', {
         credentials: 'include'
       });
 
@@ -75,7 +75,7 @@ const BlogManagementPage: React.FC = () => {
 
   const loadPosts = async () => {
     try {
-      const response = await fetch('/api/posts?pageSize=50', {
+      const response = await fetch('https://xlhyimcdz1m6.manus.spacehttps://xlhyimcdz1m6.manus.space/api/posts?pageSize=50', {
         credentials: 'include'
       });
 
@@ -94,7 +94,7 @@ const BlogManagementPage: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('/api/categories', {
+      const response = await fetch('https://xlhyimcdz1m6.manus.spacehttps://xlhyimcdz1m6.manus.space/api/categories', {
         credentials: 'include'
       });
 
@@ -111,7 +111,7 @@ const BlogManagementPage: React.FC = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/posts', {
+      const response = await fetch('https://xlhyimcdz1m6.manus.space/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -143,7 +143,7 @@ const BlogManagementPage: React.FC = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/categories', {
+      const response = await fetch('https://xlhyimcdz1m6.manus.space/api/categories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -167,7 +167,7 @@ const BlogManagementPage: React.FC = () => {
 
   const handlePublishPost = async (postId: string) => {
     try {
-      const response = await fetch(`/api/posts/${postId}/publish`, {
+      const response = await fetch(`https://xlhyimcdz1m6.manus.space/api/posts/${postId}/publish`, {
         method: 'PATCH',
         credentials: 'include'
       });
@@ -188,7 +188,7 @@ const BlogManagementPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/posts/${postId}`, {
+      const response = await fetch(`https://xlhyimcdz1m6.manus.space/api/posts/${postId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -205,7 +205,7 @@ const BlogManagementPage: React.FC = () => {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
+      await fetch('https://xlhyimcdz1m6.manus.space/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
       });

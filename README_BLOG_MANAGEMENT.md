@@ -168,16 +168,23 @@ npm run dev
 - Validação de dados
 - Tratamento de erros melhorado
 - Sistema de permissões por role
+- **Backend implantado em produção**
+- **Frontend com conexão corrigida**
 
 ✅ **Problemas Corrigidos:**
-- Erro de "constraint violation" na criação de categorias
-- Problemas nas rotas da API
-- Integração com banco de dados Turso (implementado sistema híbrido)
-- Tratamento de erros aprimorado
+- ✅ Erro de "constraint violation" na criação de categorias
+- ✅ Problemas nas rotas da API
+- ✅ Integração com banco de dados Turso (implementado sistema híbrido)
+- ✅ Tratamento de erros aprimorado
+- ✅ **Erro de conexão "Erro de conexão. Tente novamente." na página de login**
+- ✅ **Problema de roteamento 404 na página /login**
+- ✅ **Configuração de CORS para comunicação frontend-backend**
 
 ⚠️ **Observações Técnicas:**
 - Sistema implementado com dados em memória para demonstração
-- Banco Turso configurado mas com fallback para dados em memória
+- Backend Flask implantado em: https://xlhyimcdz1m6.manus.space
+- Frontend configurado para usar a API implantada
+- Arquivo `vercel.json` adicionado para SPA routing
 - Todas as funcionalidades de CRUD funcionando corretamente
 - Sistema de autenticação e autorização operacional
 
@@ -194,11 +201,17 @@ npm run dev
 
 ## Arquivos Corrigidos
 
-### Backend
-- `api/routes/categories_fixed.js` - Rotas de categorias funcionais
-- `api/routes/posts_fixed.js` - Rotas de posts funcionais  
-- `api/middlewares/error.js` - Tratamento de erros melhorado
-- `api/index.js` - Configuração atualizada
+### Backend (Flask)
+- `blog-api/src/routes/auth.py` - Autenticação com Flask e JWT
+- `blog-api/src/routes/categories.py` - Rotas de categorias funcionais
+- `blog-api/src/routes/posts.py` - Rotas de posts funcionais  
+- `blog-api/src/main.py` - Servidor Flask com CORS configurado
+- `blog-api/requirements.txt` - Dependências atualizadas
+
+### Frontend
+- `pages/LoginPage.tsx` - URL da API atualizada para produção
+- `pages/BlogManagementPage.tsx` - URLs da API atualizadas para produção
+- `vercel.json` - Configuração para SPA routing no Vercel
 
 ### Funcionalidades Testadas
 - ✅ Login/logout de usuários
@@ -207,6 +220,19 @@ npm run dev
 - ✅ Validação de dados e permissões
 - ✅ Tratamento de erros e duplicatas
 - ✅ Sistema de slugs automático
+- ✅ **Comunicação frontend-backend em produção**
+
+## URLs de Produção
+
+### Backend API
+- **URL:** https://xlhyimcdz1m6.manus.space
+- **Health Check:** https://xlhyimcdz1m6.manus.space/api/health
+- **Login:** https://xlhyimcdz1m6.manus.space/api/auth/login
+
+### Frontend
+- **URL:** Será atualizada após reimplantação no Vercel
+- **Login:** /login (após correção do roteamento)
+- **Gestão:** /blog-management (após login)
 
 ## Acesso ao Sistema
 

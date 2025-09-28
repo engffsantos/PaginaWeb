@@ -16,7 +16,7 @@ const LoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('https://xlhyimcdz1m6.manus.space/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
