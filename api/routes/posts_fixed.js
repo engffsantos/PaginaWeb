@@ -1,3 +1,4 @@
+﻿console.log('Loaded posts_fixed router');
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
@@ -5,15 +6,15 @@ import { requireAuth, optionalAuth } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Banco de dados em memória para demonstração
+// Banco de dados em memÃ³ria para demonstraÃ§Ã£o
 let posts = [
   {
     id: '1',
     title: 'Bem-vindos ao Blog EasyData360',
     slug: 'bem-vindos-ao-blog-easydata360',
-    excerpt: 'Apresentamos nosso novo blog com conteúdos sobre tecnologia e inovação.',
-    content_md: '# Bem-vindos ao Blog EasyData360\n\nEste é nosso primeiro post no blog oficial da EasyData360. Aqui você encontrará conteúdos sobre tecnologia, inovação e soluções digitais.',
-    content_html: '<h1>Bem-vindos ao Blog EasyData360</h1><p>Este é nosso primeiro post no blog oficial da EasyData360. Aqui você encontrará conteúdos sobre tecnologia, inovação e soluções digitais.</p>',
+    excerpt: 'Apresentamos nosso novo blog com conteÃºdos sobre tecnologia e inovaÃ§Ã£o.',
+    content_md: '# Bem-vindos ao Blog EasyData360\n\nEste Ã© nosso primeiro post no blog oficial da EasyData360. Aqui vocÃª encontrarÃ¡ conteÃºdos sobre tecnologia, inovaÃ§Ã£o e soluÃ§Ãµes digitais.',
+    content_html: '<h1>Bem-vindos ao Blog EasyData360</h1><p>Este Ã© nosso primeiro post no blog oficial da EasyData360. Aqui vocÃª encontrarÃ¡ conteÃºdos sobre tecnologia, inovaÃ§Ã£o e soluÃ§Ãµes digitais.</p>',
     status: 'published',
     published_at: new Date().toISOString(),
     author_id: '6631483c-4c64-4d03-b88e-940881906172',
@@ -23,7 +24,7 @@ let posts = [
   }
 ];
 
-// Schema de validação para posts
+// Schema de validaÃ§Ã£o para posts
 const postSchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1).optional(),
@@ -35,7 +36,7 @@ const postSchema = z.object({
   tags: z.array(z.string()).optional()
 });
 
-// Função para gerar slug
+// FunÃ§Ã£o para gerar slug
 function generateSlug(title) {
   return title
     .toLowerCase()
@@ -47,7 +48,7 @@ function generateSlug(title) {
     .trim('-');
 }
 
-// Função para converter markdown para HTML (simplificada)
+// FunÃ§Ã£o para converter markdown para HTML (simplificada)
 function markdownToHtml(markdown) {
   return markdown
     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
@@ -58,7 +59,7 @@ function markdownToHtml(markdown) {
     .replace(/\n/gim, '<br>');
 }
 
-// GET /api/posts - Listar posts com paginação
+// GET /api/posts - Listar posts com paginaÃ§Ã£o
 router.get('/', optionalAuth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -69,7 +70,7 @@ router.get('/', optionalAuth, async (req, res) => {
 
     let filteredPosts = [...posts];
 
-    // Filtrar por status (apenas usuários autenticados podem ver rascunhos)
+    // Filtrar por status (apenas usuÃ¡rios autenticados podem ver rascunhos)
     if (status && req.user) {
       filteredPosts = filteredPosts.filter(p => p.status === status);
     } else if (!req.user) {
@@ -91,10 +92,10 @@ router.get('/', optionalAuth, async (req, res) => {
       );
     }
 
-    // Ordenar por data de publicação (mais recentes primeiro)
+    // Ordenar por data de publicaÃ§Ã£o (mais recentes primeiro)
     filteredPosts.sort((a, b) => new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at));
 
-    // Paginação
+    // PaginaÃ§Ã£o
     const total = filteredPosts.length;
     const totalPages = Math.ceil(total / pageSize);
     const startIndex = (page - 1) * pageSize;
@@ -129,7 +130,7 @@ router.get('/:slug', optionalAuth, async (req, res) => {
       return res.status(404).json({ error: 'post_not_found' });
     }
 
-    // Verificar se o usuário pode ver este post
+    // Verificar se o usuÃ¡rio pode ver este post
     if (post.status !== 'published' && !req.user) {
       return res.status(404).json({ error: 'post_not_found' });
     }
@@ -153,7 +154,7 @@ router.post('/', requireAuth('author'), async (req, res) => {
     const slug = data.slug || generateSlug(data.title);
     const content_html = markdownToHtml(data.content_md);
 
-    // Verificar se já existe post com mesmo slug
+    // Verificar se jÃ¡ existe post com mesmo slug
     const existingPost = posts.find(p => p.slug === slug);
     if (existingPost) {
       return res.status(409).json({ 
@@ -211,7 +212,7 @@ router.put('/:id', requireAuth('author'), async (req, res) => {
 
     const post = posts[postIndex];
 
-    // Verificar se o usuário pode editar este post
+    // Verificar se o usuÃ¡rio pode editar este post
     if (post.author_id !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'editor') {
       return res.status(403).json({ error: 'forbidden' });
     }
@@ -219,7 +220,7 @@ router.put('/:id', requireAuth('author'), async (req, res) => {
     const slug = data.slug || generateSlug(data.title);
     const content_html = markdownToHtml(data.content_md);
 
-    // Verificar se já existe outro post com mesmo slug
+    // Verificar se jÃ¡ existe outro post com mesmo slug
     const existingPost = posts.find(p => p.id !== id && p.slug === slug);
     if (existingPost) {
       return res.status(409).json({ 
@@ -274,7 +275,7 @@ router.delete('/:id', requireAuth('author'), async (req, res) => {
 
     const post = posts[postIndex];
 
-    // Verificar se o usuário pode deletar este post
+    // Verificar se o usuÃ¡rio pode deletar este post
     if (post.author_id !== req.user.id && req.user.role !== 'admin' && req.user.role !== 'editor') {
       return res.status(403).json({ error: 'forbidden' });
     }
@@ -291,5 +292,30 @@ router.delete('/:id', requireAuth('author'), async (req, res) => {
   }
 });
 
+// PATCH /api/posts/:id/publish - Publicar post (memÃ³ria)
+router.patch('/:id/publish', requireAuth('editor'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const idx = posts.findIndex(p => p.id === id);
+    if (idx === -1) {
+      return res.status(404).json({ error: 'post_not_found' });
+    }
+
+    posts[idx] = {
+      ...posts[idx],
+      status: 'published',
+      published_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    res.json({ message: 'post_published' });
+  } catch (error) {
+    console.error('Erro na rota PATCH /posts/:id/publish:', error);
+    res.status(500).json({ error: 'internal_server_error', message: error.message });
+  }
+});
+
 export default router;
+
 

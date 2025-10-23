@@ -1,31 +1,37 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from '../components/Link';
-import { posts, Post } from '../features/blog/data';
 import { SearchIcon } from '../components/icons';
 
-const categories = [
-    'Desenvolvimento', 
-    'Segurança da Informação', 
-    'Dados e Analytics', 
-    'Gestão e Estratégia', 
-    'Produtos EasyData360'
-];
+type ApiPost = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  cover_url?: string;
+  created_at: string;
+  published_at?: string;
+  category_name?: string;
+};
+
+const API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+  ? 'http://localhost:3001'
+  : 'https://xlhyimcdz1m6.manus.space/api';
 
 const POSTS_PER_PAGE = 6;
 
-const PostCard: React.FC<{ post: Post }> = ({ post }) => (
+const PostCard: React.FC<{ post: ApiPost }> = ({ post }) => (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden group transform transition-transform duration-300 hover:-translate-y-2">
       <Link href={`/blog/${post.slug}`} className="block">
         <div className="relative">
-          <img src={post.cover_image} alt={post.title} className="w-full h-48 object-cover" />
+          <img src={post.cover_url || 'https://picsum.photos/seed/blogcover/800/480'} alt={post.title} className="w-full h-48 object-cover" />
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors"></div>
         </div>
         <div className="p-6 flex flex-col">
-          <p className="text-sm font-semibold text-cyan-vibrant uppercase tracking-wider">{post.category}</p>
+          <p className="text-sm font-semibold text-cyan-vibrant uppercase tracking-wider">{post.category_name || 'Sem categoria'}</p>
           <h3 className="mt-2 text-xl font-semibold text-navy group-hover:text-cyan-vibrant transition-colors h-20">{post.title}</h3>
-          <p className="text-medium-gray mt-2 text-sm flex-grow">{post.summary}</p>
+          <p className="text-medium-gray mt-2 text-sm flex-grow">{post.excerpt || ''}</p>
           <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
-              <span>{new Date(post.created_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <span>{new Date(post.published_at || post.created_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               <span className="font-semibold text-cyan-vibrant opacity-0 group-hover:opacity-100 transition-opacity">
                 Leia mais &rarr;
               </span>
@@ -40,18 +46,43 @@ const BlogListPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [posts, setPosts] = useState<ApiPost[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+      const load = async () => {
+        try {
+          const res = await fetch(`${API_BASE}/posts?pageSize=100`);
+          if (!res.ok) throw new Error('Falha ao carregar posts');
+          const data = await res.json();
+          setPosts(data.posts as ApiPost[]);
+        } catch (e: any) {
+          setError(e.message || 'Erro ao carregar posts');
+        } finally {
+          setLoading(false);
+        }
+      };
+      load();
+    }, []);
+
+    const categories = useMemo(() => {
+      const set = new Set<string>();
+      posts.forEach(p => p.category_name && set.add(p.category_name));
+      return Array.from(set).sort();
+    }, [posts]);
 
     const filteredPosts = useMemo(() => {
         return posts
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .sort((a, b) => new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime())
             .filter(post => 
                 post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                post.summary.toLowerCase().includes(searchTerm.toLowerCase())
+                (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
             )
             .filter(post => 
-                selectedCategory ? post.category === selectedCategory : true
+                selectedCategory ? post.category_name === selectedCategory : true
             );
-    }, [searchTerm, selectedCategory]);
+    }, [posts, searchTerm, selectedCategory]);
 
     const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
     const paginatedPosts = filteredPosts.slice(
@@ -66,6 +97,14 @@ const BlogListPage: React.FC = () => {
         if (currentPage > 1) setCurrentPage(currentPage - 1);
     };
     
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-off-white flex items-center justify-center">
+          <p className="text-medium-gray">Carregando posts...</p>
+        </div>
+      );
+    }
+
     return (
         <div className="bg-off-white font-sans">
             {/* Hero Section */}

@@ -1,15 +1,17 @@
-import 'dotenv/config';
-import bcrypt from 'bcrypt';
+﻿import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from './db.js';
+import { db, runMigrations } from './db.js';
 
 async function seedDatabase() {
   try {
     console.log('Iniciando seed do banco de dados...');
+    // Garantir que as tabelas existam antes do seed
+    await runMigrations();
 
-    // Criar usuário admin
+    // Criar usuÃ¡rio admin
     const adminId = uuidv4();
-    const passwordHash = await bcrypt.hash('admin123', 12);
+    const passwordHash = bcrypt.hashSync('admin123', 12);
 
     await db.execute({
       sql: 'INSERT OR IGNORE INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
@@ -19,7 +21,7 @@ async function seedDatabase() {
     // Criar algumas categorias
     const categories = [
       { name: 'Tecnologia', slug: 'tecnologia' },
-      { name: 'Negócios', slug: 'negocios' },
+      { name: 'NegÃ³cios', slug: 'negocios' },
       { name: 'Tutoriais', slug: 'tutoriais' }
     ];
 
@@ -47,8 +49,8 @@ async function seedDatabase() {
       });
     }
 
-    console.log('Seed concluído com sucesso!');
-    console.log('Usuário admin criado:');
+    console.log('Seed concluÃ­do com sucesso!');
+    console.log('UsuÃ¡rio admin criado:');
     console.log('Email: admin@easydata360.com');
     console.log('Senha: admin123');
 
@@ -58,4 +60,5 @@ async function seedDatabase() {
 }
 
 seedDatabase();
+
 

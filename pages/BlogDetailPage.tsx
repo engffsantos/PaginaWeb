@@ -1,13 +1,69 @@
-import React from 'react';
-import { posts, Post } from '../features/blog/data';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from '../components/Link';
 
-interface BlogDetailPageProps {
-  post: Post;
-}
+type ApiPost = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  cover_url?: string;
+  content_html?: string;
+  content_md: string;
+  created_at: string;
+  published_at?: string;
+  author_name?: string;
+  category_name?: string;
+};
 
-const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ post }) => {
-    const relatedPosts = posts.filter(p => p.category === post.category && p.id !== post.id).slice(0, 3);
+const API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+  ? 'http://localhost:3001'
+  : 'https://xlhyimcdz1m6.manus.space/api';
+
+const BlogDetailPage: React.FC = () => {
+    const slug = typeof window !== 'undefined' ? window.location.pathname.split('/')[2] : '';
+    const [post, setPost] = useState<ApiPost | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+      const load = async () => {
+        try {
+          const res = await fetch(`${API_BASE}/posts/${slug}`);
+          if (!res.ok) throw new Error('Post não encontrado');
+          const data = await res.json();
+          setPost(data as ApiPost);
+        } catch (e: any) {
+          setError(e.message || 'Erro ao carregar post');
+        } finally {
+          setLoading(false);
+        }
+      };
+      if (slug) load();
+    }, [slug]);
+
+    const relatedPosts: ApiPost[] = useMemo(() => [], []);
+
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <p className="text-medium-gray">Carregando...</p>
+        </div>
+      );
+    }
+
+    if (error || !post) {
+      return (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-navy">Post não encontrado</h1>
+            <p className="text-medium-gray mt-2">Verifique o link e tente novamente.</p>
+            <div className="mt-6">
+              <Link href="/blog" className="text-cyan-vibrant font-semibold">Voltar ao blog</Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
     
     return (
         <div className="bg-white">
@@ -15,24 +71,24 @@ const BlogDetailPage: React.FC<BlogDetailPageProps> = ({ post }) => {
                 {/* Header Section */}
                 <header className="bg-light-gray py-16">
                     <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center">
-                        <p className="text-cyan-vibrant font-semibold uppercase tracking-wider">{post.category}</p>
+                        <p className="text-cyan-vibrant font-semibold uppercase tracking-wider">{post.category_name || 'Sem categoria'}</p>
                         <h1 className="mt-4 text-4xl md:text-5xl font-extrabold text-navy">{post.title}</h1>
                         <p className="mt-6 text-lg text-gray-500">
-                            Por {post.author} &bull; {new Date(post.created_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            {post.author_name ? `Por ${post.author_name} • ` : ''}{new Date(post.published_at || post.created_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}
                         </p>
                     </div>
                 </header>
                 
                 {/* Cover Image */}
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 -mt-12">
-                     <img src={post.cover_image} alt={post.title} className="w-full max-w-5xl mx-auto h-auto object-cover rounded-lg shadow-2xl" style={{aspectRatio: '16/9'}} />
+                     <img src={post.cover_url || 'https://picsum.photos/seed/blogcover/1200/675'} alt={post.title} className="w-full max-w-5xl mx-auto h-auto object-cover rounded-lg shadow-2xl" style={{aspectRatio: '16/9'}} />
                 </div>
 
                 {/* Article Content */}
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div 
                         className="prose lg:prose-xl max-w-3xl mx-auto"
-                        dangerouslySetInnerHTML={{ __html: post.content }}
+                        dangerouslySetInnerHTML={{ __html: post.content_html || post.content_md }}
                     />
 
                     {/* Share CTA */}

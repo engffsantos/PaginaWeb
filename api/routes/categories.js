@@ -27,28 +27,19 @@ function generateSlug(name) {
 // GET /api/categories - Listar todas as categorias
 router.get('/', async (req, res, next) => {
   try {
-    console.log('Tentando executar consulta de categorias...');
-    
-    // Retornar array vazio por enquanto para testar
-    res.json([]);
+    const result = await db.execute({
+      sql: 'SELECT id, name, slug FROM categories ORDER BY name ASC',
+      args: []
+    });
+    res.json(result.rows);
   } catch (error) {
     console.error('Erro na rota GET /categories:', error);
-    res.status(500).json({ 
-      error: 'internal_server_error', 
-      message: error.message,
-      details: error.stack 
-    });
+    next(error);
   }
 });
 
 // GET /api/categories/test - Rota de teste
-router.get('/test', async (req, res) => {
-  try {
-    res.json({ message: 'Rota de teste funcionando', timestamp: new Date().toISOString() });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// Removida rota de teste
 
 // GET /api/categories/:slug - Obter categoria por slug
 router.get('/:slug', async (req, res, next) => {

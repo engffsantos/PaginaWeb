@@ -1,5 +1,5 @@
-import express from 'express';
-import bcrypt from 'bcrypt';
+﻿import express from 'express';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
@@ -7,13 +7,13 @@ import { db } from '../db.js';
 
 const router = express.Router();
 
-// Schema de validação para login
+// Schema de validaÃ§Ã£o para login
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1)
 });
 
-// Schema de validação para registro
+// Schema de validaÃ§Ã£o para registro
 const registerSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
@@ -26,7 +26,7 @@ router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
-    // Buscar usuário por email
+    // Buscar usuÃ¡rio por email
     const result = await db.execute({
       sql: 'SELECT * FROM users WHERE email = ?',
       args: [email]
@@ -38,7 +38,7 @@ router.post('/login', async (req, res, next) => {
     }
 
     // Verificar senha
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    const isValidPassword = bcrypt.compareSync(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'invalid_credentials' });
     }
@@ -106,9 +106,9 @@ router.post('/register', async (req, res, next) => {
     const { name, email, password, role } = registerSchema.parse(req.body);
 
     // Hash da senha
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = bcrypt.hashSync(password, 12);
 
-    // Criar usuário
+    // Criar usuÃ¡rio
     const userId = uuidv4();
     await db.execute({
       sql: 'INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
@@ -136,7 +136,7 @@ router.post('/refresh', async (req, res, next) => {
     // Verificar refresh token
     const payload = jwt.verify(refreshToken, process.env.JWT_SECRET);
 
-    // Buscar sessão no banco
+    // Buscar sessÃ£o no banco
     const sessionResult = await db.execute({
       sql: 'SELECT * FROM sessions WHERE refresh_token = ? AND user_id = ? AND expires_at > datetime("now")',
       args: [refreshToken, payload.id]
@@ -146,7 +146,7 @@ router.post('/refresh', async (req, res, next) => {
       return res.status(401).json({ error: 'invalid_refresh_token' });
     }
 
-    // Buscar dados do usuário
+    // Buscar dados do usuÃ¡rio
     const userResult = await db.execute({
       sql: 'SELECT * FROM users WHERE id = ?',
       args: [payload.id]
@@ -195,7 +195,7 @@ router.post('/logout', async (req, res, next) => {
     const refreshToken = req.cookies?.refresh_token;
     
     if (refreshToken) {
-      // Remover sessão do banco
+      // Remover sessÃ£o do banco
       await db.execute({
         sql: 'DELETE FROM sessions WHERE refresh_token = ?',
         args: [refreshToken]
@@ -223,7 +223,7 @@ router.get('/me', async (req, res, next) => {
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Buscar dados atualizados do usuário
+    // Buscar dados atualizados do usuÃ¡rio
     const result = await db.execute({
       sql: 'SELECT id, name, email, role, created_at FROM users WHERE id = ?',
       args: [payload.id]
@@ -241,4 +241,5 @@ router.get('/me', async (req, res, next) => {
 });
 
 export default router;
+
 

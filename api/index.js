@@ -7,8 +7,8 @@ import { errorHandler } from './middlewares/error.js';
 
 // Rotas (Express.Router)
 import authRoutes from './routes/auth.js';
-import postsRoutes from './routes/posts_fixed.js';
-import categoriesRoutes from './routes/categories_fixed.js';
+import postsRoutes from './routes/posts.js';
+import categoriesRoutes from './routes/categories.js';
 import tagsRoutes from './routes/tags.js';
 
 // *** IMPORTANTE ***
@@ -19,8 +19,22 @@ import tagsRoutes from './routes/tags.js';
 const app = express();
 
 // CORS — inclua também seu domínio de produção
-const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+// CORS: aceita múltiplas origens via CORS_ORIGINS (separadas por vírgula)
+const originList = (process.env.CORS_ORIGINS || process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const allowed = originList.includes(origin);
+      return callback(allowed ? null : new Error('Not allowed by CORS'), allowed);
+    },
+    credentials: true,
+  })
+);
 
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());

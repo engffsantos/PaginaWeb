@@ -1,3 +1,4 @@
+﻿console.log('Loaded posts router');
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
@@ -6,7 +7,7 @@ import { requireAuth, optionalAuth } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Schema de validação para posts
+// Schema de validaÃ§Ã£o para posts
 const postSchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1).optional(),
@@ -19,7 +20,7 @@ const postSchema = z.object({
   tags: z.array(z.string()).optional()
 });
 
-// Função para gerar slug único
+// FunÃ§Ã£o para gerar slug Ãºnico
 async function ensureUniqueSlug(baseSlug, excludeId = null) {
   let slug = baseSlug;
   let counter = 2;
@@ -41,19 +42,19 @@ async function ensureUniqueSlug(baseSlug, excludeId = null) {
   }
 }
 
-// Função para gerar slug a partir do título
+// FunÃ§Ã£o para gerar slug a partir do tÃ­tulo
 function generateSlug(title) {
   return title
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // Remove acentos
     .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
-    .replace(/\s+/g, '-') // Substitui espaços por hífens
-    .replace(/-+/g, '-') // Remove hífens duplicados
-    .trim('-'); // Remove hífens do início e fim
+    .replace(/\s+/g, '-') // Substitui espaÃ§os por hÃ­fens
+    .replace(/-+/g, '-') // Remove hÃ­fens duplicados
+    .trim('-'); // Remove hÃ­fens do inÃ­cio e fim
 }
 
-// GET /api/posts - Listar posts (com paginação e filtros)
+// GET /api/posts - Listar posts (com paginaÃ§Ã£o e filtros)
 router.get('/', optionalAuth, async (req, res, next) => {
   try {
     const {
@@ -72,7 +73,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
     let whereConditions = [];
     let args = [];
 
-    // Filtro por status (usuários não autenticados só veem publicados)
+    // Filtro por status (usuÃ¡rios nÃ£o autenticados sÃ³ veem publicados)
     if (!req.user) {
       whereConditions.push("p.status = 'published'");
     } else if (status) {
@@ -92,7 +93,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
       args.push(author_id);
     }
 
-    // Busca por texto (título, excerpt, conteúdo)
+    // Busca por texto (tÃ­tulo, excerpt, conteÃºdo)
     if (q) {
       whereConditions.push("(p.title LIKE ? OR p.excerpt LIKE ? OR p.content_md LIKE ?)");
       const searchTerm = `%${q}%`;
@@ -142,7 +143,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
       })
     );
 
-    // Contar total para paginação
+    // Contar total para paginaÃ§Ã£o
     const countQuery = `
       SELECT COUNT(*) as total
       FROM posts p
@@ -197,7 +198,7 @@ router.get('/:slug', optionalAuth, async (req, res, next) => {
       return res.status(404).json({ error: 'post_not_found' });
     }
 
-    // Verificar permissões
+    // Verificar permissÃµes
     if (post.status !== 'published' && !req.user) {
       return res.status(404).json({ error: 'post_not_found' });
     }
@@ -206,7 +207,7 @@ router.get('/:slug', optionalAuth, async (req, res, next) => {
       const roles = ['viewer', 'author', 'editor', 'admin'];
       const userRoleIndex = roles.indexOf(req.user.role);
       
-      // Autor pode ver seus próprios posts, editor+ pode ver todos
+      // Autor pode ver seus prÃ³prios posts, editor+ pode ver todos
       if (post.author_id !== req.user.id && userRoleIndex < 2) {
         return res.status(404).json({ error: 'post_not_found' });
       }
@@ -266,7 +267,7 @@ router.post('/', requireAuth('author'), async (req, res, next) => {
     // Inserir tags se fornecidas
     if (data.tags && data.tags.length > 0) {
       for (const tagName of data.tags) {
-        // Criar tag se não existir
+        // Criar tag se nÃ£o existir
         const tagSlug = generateSlug(tagName);
         const tagId = uuidv4();
         
@@ -304,7 +305,7 @@ router.put('/:id', requireAuth('author'), async (req, res, next) => {
     const { id } = req.params;
     const data = postSchema.parse(req.body);
 
-    // Verificar se o post existe e se o usuário tem permissão
+    // Verificar se o post existe e se o usuÃ¡rio tem permissÃ£o
     const postResult = await db.execute({
       sql: 'SELECT * FROM posts WHERE id = ?',
       args: [id]
@@ -315,7 +316,7 @@ router.put('/:id', requireAuth('author'), async (req, res, next) => {
       return res.status(404).json({ error: 'post_not_found' });
     }
 
-    // Verificar permissões
+    // Verificar permissÃµes
     const roles = ['viewer', 'author', 'editor', 'admin'];
     const userRoleIndex = roles.indexOf(req.user.role);
     
@@ -323,7 +324,7 @@ router.put('/:id', requireAuth('author'), async (req, res, next) => {
       return res.status(403).json({ error: 'forbidden' });
     }
 
-    // Gerar slug se necessário
+    // Gerar slug se necessÃ¡rio
     let slug = data.slug || post.slug;
     if (data.title !== post.title && !data.slug) {
       slug = generateSlug(data.title);
@@ -410,7 +411,7 @@ router.delete('/:id', requireAuth('editor'), async (req, res, next) => {
       return res.status(404).json({ error: 'post_not_found' });
     }
 
-    // Verificar permissões (autor pode deletar apenas rascunhos)
+    // Verificar permissÃµes (autor pode deletar apenas rascunhos)
     if (req.user.role === 'author') {
       if (post.author_id !== req.user.id || post.status !== 'draft') {
         return res.status(403).json({ error: 'forbidden' });
@@ -451,7 +452,7 @@ router.patch('/:id/publish', requireAuth('editor'), async (req, res, next) => {
   }
 });
 
-// PATCH /api/posts/:id/schedule - Agendar publicação
+// PATCH /api/posts/:id/schedule - Agendar publicaÃ§Ã£o
 router.patch('/:id/schedule', requireAuth('editor'), async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -479,4 +480,5 @@ router.patch('/:id/schedule', requireAuth('editor'), async (req, res, next) => {
 });
 
 export default router;
+
 

@@ -85,13 +85,7 @@ const App: React.FC = () => {
       page = <NotFoundPage />;
     }
   } else if (pathname.startsWith('/blog/')) {
-    const slug = pathname.split('/')[2];
-    const post = posts.find(p => p.slug === slug);
-    if (post) {
-      page = <BlogDetailPage post={post} />;
-    } else {
-      page = <NotFoundPage />;
-    }
+    page = <BlogDetailPage />;
   } else if (pathname.startsWith('/solutions/')) {
     const solutionId = pathname.split('/')[2];
     const solution = solutions.find(s => s.id === solutionId);

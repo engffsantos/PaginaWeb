@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import Link from '../components/Link';
 
 interface User {
@@ -17,6 +17,10 @@ interface Post {
   updated_at: string;
   author_name: string;
   category_name?: string;
+  excerpt?: string;
+  content_md: string;
+  cover_url?: string;
+  category_id?: string;
 }
 
 interface Category {
@@ -25,7 +29,28 @@ interface Category {
   slug: string;
 }
 
+const API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+  ? 'http://localhost:3001'
+  : 'https://xlhyimcdz1m6.manus.space/api';
+
 const BlogManagementPage: React.FC = () => {
+  // Conversor simples de Markdown -> HTML (para prÃƒÂ©-visualizaÃƒÂ§ÃƒÂ£o)
+  const markdownToHtml = (markdown: string) => {
+    if (!markdown) return '';
+    let html = markdown;
+    // Títulos (ordem do maior para o menor)
+    html = html.replace(/^###\s+(.*)$/gim, '<h3>$1</h3>');
+    html = html.replace(/^##\s+(.*)$/gim, '<h2>$1</h2>');
+    html = html.replace(/^#\s+(.*)$/gim, '<h1>$1</h1>');
+    // Negrito e itÃƒÂ¡lico
+    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+    html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+    // CÃ³digo inline
+    html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');
+    // Quebras de linha
+    html = html.replace(/\n/g, '<br/>');
+    return html;
+  };
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -33,17 +58,31 @@ const BlogManagementPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'categories'>('posts');
 
-  // Estados para criação de post
+  // Estados para criaÃƒÂ§ÃƒÂ£o de post
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newPost, setNewPost] = useState({
     title: '',
+    cover_url: '',
+    excerpt: '',
+    content_md: '',
+    category_id: '',
+    status: 'draft' as const,
+    published_at: ''
+  });
+
+  // Estados de ediÃƒÂ§ÃƒÂ£o de post
+  const [showEditPost, setShowEditPost] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editPost, setEditPost] = useState({
+    title: '',
+    cover_url: '',
     excerpt: '',
     content_md: '',
     category_id: '',
     status: 'draft' as const
   });
 
-  // Estados para criação de categoria
+  // Estados para criaÃƒÂ§ÃƒÂ£o de categoria
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [newCategory, setNewCategory] = useState({
     name: ''
@@ -57,7 +96,7 @@ const BlogManagementPage: React.FC = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('https://xlhyimcdz1m6.manus.spacehttps://xlhyimcdz1m6.manus.space/api/auth/me', {
+      const response = await fetch(`${API_BASE}/auth/me`, {
         credentials: 'include'
       });
 
@@ -65,17 +104,17 @@ const BlogManagementPage: React.FC = () => {
         const data = await response.json();
         setUser(data.user);
       } else {
-        // Redirecionar para login se não autenticado
+        // Redirecionar para login se nÃƒÂ£o autenticado
         window.location.href = '/login';
       }
     } catch (err) {
-      setError('Erro ao verificar autenticação');
+      setError('Erro ao verificar autenticaÃƒÂ§ÃƒÂ£o');
     }
   };
 
   const loadPosts = async () => {
     try {
-      const response = await fetch('https://xlhyimcdz1m6.manus.spacehttps://xlhyimcdz1m6.manus.space/api/posts?pageSize=50', {
+      const response = await fetch(`${API_BASE}/posts?pageSize=50`, {
         credentials: 'include'
       });
 
@@ -94,7 +133,7 @@ const BlogManagementPage: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('https://xlhyimcdz1m6.manus.spacehttps://xlhyimcdz1m6.manus.space/api/categories', {
+      const response = await fetch(`${API_BASE}/categories`, {
         credentials: 'include'
       });
 
@@ -111,7 +150,7 @@ const BlogManagementPage: React.FC = () => {
     e.preventDefault();
     
     try {
-      const response = await fetch('https://xlhyimcdz1m6.manus.space/api/posts', {
+      const response = await fetch(`${API_BASE}/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -124,6 +163,7 @@ const BlogManagementPage: React.FC = () => {
         setShowCreatePost(false);
         setNewPost({
           title: '',
+          cover_url: '',
           excerpt: '',
           content_md: '',
           category_id: '',
@@ -139,11 +179,48 @@ const BlogManagementPage: React.FC = () => {
     }
   };
 
+  const openEditPost = (post: Post) => {
+    setEditingPostId(post.id);
+    setEditPost({
+      title: post.title,
+      cover_url: post.cover_url || '',
+      excerpt: post.excerpt || '',
+      content_md: post.content_md || '',
+      category_id: post.category_id || '',
+      status: post.status as typeof newPost.status,
+    });
+    setShowEditPost(true);
+  };
+
+  const handleUpdatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPostId) return;
+    try {
+      const response = await fetch(`${API_BASE}/posts/${editingPostId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(editPost)
+      });
+      if (response.ok) {
+        setShowEditPost(false);
+        setEditingPostId(null);
+        setEditPost({ title: '', cover_url: '', excerpt: '', content_md: '', category_id: '', status: 'draft' });
+        loadPosts();
+      } else {
+        const err = await response.json().catch(() => ({}));
+        setError(err.error || 'Erro ao atualizar post');
+      }
+    } catch (err) {
+      setError('Erro ao atualizar post');
+    }
+  };
+
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const response = await fetch('https://xlhyimcdz1m6.manus.space/api/categories', {
+      const response = await fetch(`${API_BASE}/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -167,7 +244,7 @@ const BlogManagementPage: React.FC = () => {
 
   const handlePublishPost = async (postId: string) => {
     try {
-      const response = await fetch(`https://xlhyimcdz1m6.manus.space/api/posts/${postId}/publish`, {
+      const response = await fetch(`${API_BASE}/posts/${postId}/publish`, {
         method: 'PATCH',
         credentials: 'include'
       });
@@ -188,7 +265,7 @@ const BlogManagementPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`https://xlhyimcdz1m6.manus.space/api/posts/${postId}`, {
+      const response = await fetch(`${API_BASE}/posts/${postId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -205,7 +282,7 @@ const BlogManagementPage: React.FC = () => {
 
   const logout = async () => {
     try {
-      await fetch('https://xlhyimcdz1m6.manus.space/api/auth/logout', {
+      await fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -256,12 +333,12 @@ const BlogManagementPage: React.FC = () => {
               <Link href="/" className="text-2xl font-bold text-navy">
                 EasyData<span className="text-cyan-vibrant">360</span>
               </Link>
-              <span className="ml-4 text-gray-500">/ Gestão do Blog</span>
+              <span className="ml-4 text-gray-500">/ GestÃƒÂ£o do Blog</span>
             </div>
             
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">
-                Olá, {user?.name}
+                OlÃƒÂ¡, {user?.name}
               </span>
               <button
                 onClick={logout}
@@ -283,7 +360,7 @@ const BlogManagementPage: React.FC = () => {
               onClick={() => setError(null)}
               className="float-right text-red-500 hover:text-red-700"
             >
-              ×
+              Ãƒâ€”
             </button>
           </div>
         )}
@@ -333,7 +410,7 @@ const BlogManagementPage: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Título
+                      TÃƒÂ­tulo
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -348,7 +425,7 @@ const BlogManagementPage: React.FC = () => {
                       Data
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ações
+                      AÃƒÂ§ÃƒÂµes
                     </th>
                   </tr>
                 </thead>
@@ -376,7 +453,13 @@ const BlogManagementPage: React.FC = () => {
                         {new Date(post.created_at).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-3">
+                          <button
+                            onClick={() => openEditPost(post)}
+                            className="text-cyan-vibrant hover:text-cyan-600"
+                          >
+                            Editar
+                          </button>
                           {post.status === 'draft' && (
                             <button
                               onClick={() => handlePublishPost(post.id)}
@@ -389,7 +472,7 @@ const BlogManagementPage: React.FC = () => {
                             onClick={() => handleDeletePost(post.id)}
                             className="text-red-600 hover:text-red-900"
                           >
-                            Deletar
+                            Excluir
                           </button>
                         </div>
                       </td>
@@ -455,7 +538,7 @@ const BlogManagementPage: React.FC = () => {
               <form onSubmit={handleCreatePost} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Título
+                    TÃƒÂ­tulo
                   </label>
                   <input
                     type="text"
@@ -463,6 +546,19 @@ const BlogManagementPage: React.FC = () => {
                     onChange={(e) => setNewPost({...newPost, title: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
                     required
+                  />
+                </div>
+
+              <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    URL da Imagem (opcional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={newPost.cover_url}
+                    onChange={(e) => setNewPost({...newPost, cover_url: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
                   />
                 </div>
 
@@ -480,7 +576,7 @@ const BlogManagementPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Conteúdo (Markdown)
+                    ConteÃƒÂºdo (Markdown)
                   </label>
                   <textarea
                     value={newPost.content_md}
@@ -488,6 +584,13 @@ const BlogManagementPage: React.FC = () => {
                     rows={8}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
                     required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">PrÃ©â€‘visualizaÃ§Ã£o</label>
+                  <div
+                    className="w-full min-h-[160px] border border-gray-200 rounded-md p-4 bg-gray-50 text-gray-800 overflow-auto"
+                    dangerouslySetInnerHTML={{ __html: markdownToHtml(newPost.content_md) }}
                   />
                 </div>
 
@@ -522,6 +625,117 @@ const BlogManagementPage: React.FC = () => {
                     className="px-4 py-2 text-sm font-medium text-white bg-cyan-vibrant rounded-md hover:bg-cyan-600"
                   >
                     Criar Post
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Post Modal */}
+      {showEditPost && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-6 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div className="mt-1">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Post</h3>
+              <form onSubmit={handleUpdatePost} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">TÃƒÂ­tulo</label>
+                  <input
+                    type="text"
+                    value={editPost.title}
+                    onChange={(e) => setEditPost({ ...editPost, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">URL da Imagem (opcional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={editPost.cover_url}
+                    onChange={(e) => setEditPost({ ...editPost, cover_url: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Resumo</label>
+                    <textarea
+                      value={editPost.excerpt}
+                      onChange={(e) => setEditPost({ ...editPost, excerpt: e.target.value })}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
+                    />
+
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">ConteÃƒÂºdo (Markdown)</label>
+                      <textarea
+                        value={editPost.content_md}
+                        onChange={(e) => setEditPost({ ...editPost, content_md: e.target.value })}
+                        rows={10}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">PrÃƒÂ©Ã¢â‚¬â€˜visualizaÃƒÂ§ÃƒÂ£o</label>
+                    <div
+                      className="w-full min-h-[200px] border border-gray-200 rounded-md p-4 bg-gray-50 text-gray-800 overflow-auto"
+                      dangerouslySetInnerHTML={{ __html: markdownToHtml(editPost.content_md) }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select
+                      value={editPost.category_id}
+                      onChange={(e) => setEditPost({ ...editPost, category_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
+                    >
+                      <option value="">Selecione uma categoria</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      value={editPost.status}
+                      onChange={(e) => setEditPost({ ...editPost, status: e.target.value as any })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-vibrant"
+                    >
+                      <option value="draft">Rascunho</option>
+                      <option value="scheduled">Agendado</option>
+                      <option value="published">Publicado</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => { setShowEditPost(false); setEditingPostId(null); }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm font-medium text-white bg-cyan-vibrant rounded-md hover:bg-cyan-600"
+                  >
+                    Salvar AlteraÃƒÂ§ÃƒÂµes
                   </button>
                 </div>
               </form>
@@ -578,4 +792,6 @@ const BlogManagementPage: React.FC = () => {
 };
 
 export default BlogManagementPage;
+
+
 

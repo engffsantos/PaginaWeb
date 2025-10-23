@@ -1,0 +1,36 @@
+Error details: {
+  name: 'LibsqlError',
+  message: 'SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed',
+  code: 'SQLITE_CONSTRAINT',
+  stack: 'LibsqlError: SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed\n' +
+    '    at mapHranaError (file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/node_modules/@libsql/client/lib-esm/hrana.js:268:16)\n' +
+    '    at file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/node_modules/@libsql/client/lib-esm/http.js:76:23\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at async file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/routes/posts.js:246:5',
+  url: '/posts',
+  method: 'POST'
+}
+Error details: {
+  name: 'LibsqlError',
+  message: 'SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed',
+  code: 'SQLITE_CONSTRAINT',
+  stack: 'LibsqlError: SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed\n' +
+    '    at mapHranaError (file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/node_modules/@libsql/client/lib-esm/hrana.js:268:16)\n' +
+    '    at file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/node_modules/@libsql/client/lib-esm/http.js:76:23\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at async file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/routes/posts.js:246:5',
+  url: '/posts',
+  method: 'POST'
+}
+Error details: {
+  name: 'LibsqlError',
+  message: 'SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed',
+  code: 'SQLITE_CONSTRAINT',
+  stack: 'LibsqlError: SQLITE_CONSTRAINT: SQLite error: FOREIGN KEY constraint failed\n' +
+    '    at mapHranaError (file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/node_modules/@libsql/client/lib-esm/hrana.js:268:16)\n' +
+    '    at file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/node_modules/@libsql/client/lib-esm/http.js:76:23\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at async file:///C:/Users/Fernando/Downloads/easydata360-landing-page/api/routes/posts.js:246:5',
+  url: '/posts',
+  method: 'POST'
+}

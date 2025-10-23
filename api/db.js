@@ -9,11 +9,15 @@ let _db = null;
  */
 function getDbConfigFromEnv() {
   const url =
+    // Prefer explicit blog_* vars if provided
+    process.env.blog_TURSO_DATABASE_URL ||
     process.env.TURSO_DATABASE_URL ||
     process.env.LIBSQL_URL ||
     null;
 
   const authToken =
+    // Prefer explicit blog_* vars if provided
+    process.env.blog_TURSO_AUTH_TOKEN ||
     process.env.TURSO_AUTH_TOKEN ||
     process.env.LIBSQL_AUTH_TOKEN ||
     null;
@@ -49,6 +53,9 @@ export function getDb() {
   }
   return _db;
 }
+
+// Provide a convenience export that existing routes import as `{ db }`
+export const db = /** @type {import('@libsql/client').Client} */ (getDb());
 
 /**
  * Executa migrations para criar tabelas se não existirem

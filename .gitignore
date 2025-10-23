@@ -1,0 +1,5 @@
+﻿.tools/
+api/server.out.log
+api/server.err.log
+api/seed.utf8.tmp
+
