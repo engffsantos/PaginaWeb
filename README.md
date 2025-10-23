@@ -1,86 +1,107 @@
-# EasyData360 - Landing Page
+﻿# EasyData360 — Landing Page e Blog (PT‑BR)
 
-This project is a modern, professional, and fully responsive landing page for **EasyData360**, a software house specializing in custom digital solutions for businesses. The application is built as a Single-Page Application (SPA) using React, TypeScript, and Tailwind CSS.
+Landing page moderna e SPA com blog integrado, painel de gestão e backend conectado ao Turso (libSQL).
 
-## ✨ Features
+## Recursos
 
-- **Modern & Responsive UI**: Clean, professional design that adapts seamlessly to all screen sizes, from mobile phones to desktops.
-- **Component-Based Architecture**: Built with reusable React components for maintainability and scalability.
-- **Client-Side Routing**: A lightweight, custom routing solution provides a fast, SPA experience without full page reloads.
-- **Dynamic Content Pages**: The application includes several pages:
-  - **Home**: A comprehensive overview with sections for products, services, testimonials, and differentiators.
-  - **Solutions**: A list of all software products, with dedicated detail pages for each one.
-  - **Services**: A detailed breakdown of the consultancy and technical services offered.
-  - **Blog**: A filterable and paginated list of articles, with individual pages for each post.
-  - **Cases**: A showcase of success stories with clients.
-  - **About, Support, Login, Demo**: Static pages with company information and forms.
-- **Interactive Elements**: Features smooth animations, a sticky header, dropdown menus, and a testimonial carousel.
+- UI moderna e responsiva (Tailwind) com navegação SPA (React + TypeScript).
+- Blog público com lista, busca, categorias e página de detalhe.
+- Painel de gestão do blog (login) para criar, editar, publicar e agendar posts.
+- Preview Markdown → HTML em tempo real no painel (criação e edição).
+- Backend Express com autenticação via JWT, banco Turso (libSQL) e rotas REST.
 
-## 🛠️ Tech Stack
+## Stack Técnica
 
-- **Frontend Library**: [React](https://reactjs.org/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) (via CDN)
-- **Icons**: Custom SVG components.
+- Frontend: React 19, TypeScript, Vite 6, Tailwind via CDN.
+- Backend: Node/Express, JWT, cookie HTTP‑only, bcryptjs, zod.
+- Banco: Turso (libSQL) via `@libsql/client`.
 
-The project is intentionally set up with a minimal toolchain, using a CDN for Tailwind CSS and an `importmap` for React to avoid a complex build process.
-
-## 📁 Project Structure
-
-The codebase is organized into features and shared components to promote separation of concerns and code reusability.
+## Estrutura do Projeto
 
 ```
 /
-├── components/         # Reusable UI components (Header, Footer, Link, icons.tsx, etc.)
-├── features/           # Feature-specific logic, data, and components
-│   ├── blog/
-│   │   └── data.ts
-│   ├── cases/
-│   │   └── data.ts
-│   ├── home/           # Components specific to the HomePage (Hero, Products, etc.)
-│   └── solutions/
-│       └── data.ts
-├── pages/              # Top-level components for each route (HomePage, AboutPage, etc.)
-├── App.tsx             # Main component, handles routing logic
-├── index.html          # Main HTML entry point, includes CDN links and importmap
-├── index.tsx           # React application root
-├── metadata.json       # Project metadata
-└── README.md           # This file
+├─ api/                         # Backend (Express)
+│  ├─ index.js                  # App Express (exportado p/ serverless)
+│  ├─ server.js                 # Listener local (porta 3001)
+│  ├─ db.js                     # Cliente Turso/libSQL e migrations
+│  ├─ routes/
+│  │  ├─ auth.js                # Login, refresh, logout, me
+│  │  ├─ posts.js               # Listar, criar, atualizar, publicar, agendar, deletar
+│  │  └─ categories.js          # CRUD de categorias
+│  ├─ middlewares/
+│  │  └─ auth.js                # requireAuth / optionalAuth
+│  ├─ .env                      # Variáveis do backend (Turso, JWT, CORS)
+│  └─ package.json              # Scripts do backend
+├─ pages/                       # Páginas da SPA
+│  ├─ BlogListPage.tsx          # Lista posts do backend
+│  ├─ BlogDetailPage.tsx        # Carrega post por slug do backend
+│  └─ BlogManagementPage.tsx    # Painel: criar/editar/publicar/agendar com preview
+├─ components/                  # Header, Footer, Link, ícones etc.
+├─ App.tsx                      # Roteador SPA (window.location)
+├─ index.html                   # Entrada HTML (Tailwind via CDN + importmap)
+└─ index.tsx                    # Bootstrap React
 ```
 
-### Key Files & Concepts
+## Como Rodar Localmente
 
-- **`App.tsx`**: This component acts as the central router. It reads `window.location.pathname` and conditionally renders the appropriate page component.
-- **`components/Link.tsx`**: A custom `Link` component that intercepts navigation. Instead of a full page refresh, it uses `window.history.pushState()` and dispatches a custom `pushstate` event, which `App.tsx` listens for to update the view. This creates the SPA behavior.
-- **`features/**/data.ts`**: These files act as a simple, in-memory database for content like blog posts, solutions, and case studies.
+Pré‑requisitos:
+- Node.js 20+ (o projeto inclui uma cópia portátil em `.tools/`, opcional)
 
-## 🚀 Getting Started
+1) Backend (API)
+- Copie `api/.env.example` para `api/.env` e preencha:
+  - `blog_TURSO_DATABASE_URL=libsql://<sua-instancia>.turso.io`
+  - `blog_TURSO_AUTH_TOKEN=<seu-token>`
+  - `JWT_SECRET=<uma-chave-segura>`
+  - `CORS_ORIGINS=http://localhost:5173,http://localhost:3000`
+- Instale deps e inicie:
+```
+cd api
+npm install
+npm run dev     # sobe em http://localhost:3001
+```
+- Healthcheck: `GET http://localhost:3001/health`
 
-This project is a static web application and does not require a complex build step.
+2) Frontend
+```
+npm install
+npm run dev     # Vite em http://localhost:5173 (ou 3000)
+```
 
-### Prerequisites
+Credenciais de demonstração (seed):
+- Email: `admin@easydata360.com`
+- Senha: `admin123`
 
-You need a simple local web server to serve the files. Most modern code editors have extensions for this (like "Live Server" for VS Code), or you can use a simple command-line tool.
+## Variáveis de Ambiente (API)
 
-### Running Locally
+- `blog_TURSO_DATABASE_URL` e `blog_TURSO_AUTH_TOKEN`: credenciais do Turso (preferenciais).
+- `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN`: alternativas lidas por `api/db.js`.
+- `JWT_SECRET`: segredo para assinar tokens.
+- `CORS_ORIGINS`: lista de origens permitidas, separadas por vírgula.
+- `NODE_ENV`: `development` ou `production`.
 
-1.  **Clone the repository (or have the files locally).**
+## Endpoints Principais (API)
 
-2.  **Serve the project directory.**
-    If you have Python installed, you can run a simple server from the project's root directory:
+- Autenticação (`/auth`)
+  - `POST /login` — faz login (cookies HTTP‑only)
+  - `POST /logout` — encerra sessão
+  - `GET /me` — retorna usuário autenticado
+- Posts (`/posts`)
+  - `GET /` — lista (filtros e paginação); anônimos veem “published”
+  - `GET /:slug` — detalhe do post
+  - `POST /` — criar (autor)
+  - `PUT /:id` — atualizar (autor/editor/admin)
+  - `PATCH /:id/publish` — publicar (editor/admin)
+  - `PATCH /:id/schedule` — agendar publicação (editor/admin)
+  - `DELETE /:id` — remover (regras por papel)
+- Categorias (`/categories`) — listar e CRUD (regras por papel)
 
-    ```bash
-    # For Python 3
-    python -m http.server 8000
-    ```
+## Observações de Deploy (Vercel)
 
-    If you have Node.js installed, you can use `npx`:
-    ```bash
-    npx serve .
-    ```
+- Em `api/index.js` o app é exportado (não usar `app.listen`).
+- A pasta `/api` da Vercel já fornece o prefixo `/api` nas rotas.
+- Evite usar `file:` como storage em serverless; use Turso remoto.
 
-3.  **Open your browser.**
-    Navigate to `http://localhost:8000` (or the URL provided by your server). The application should load and run.
+## Licença e Contribuição
 
----
-*Generated by your friendly senior frontend engineer.*
+- Projeto interno da EasyData360. Contribuições via PR são bem‑vindas.
+- Padronize commits (ex.: Conventional Commits) e descreva claramente mudanças no PR.
